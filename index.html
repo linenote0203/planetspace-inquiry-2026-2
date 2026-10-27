@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<title>행성우주과학 자유탐구 보고서</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap">
+<style>
+:root{
+  --paper:#EEF0F4; --panel:#FFFFFF; --field:#FBFCFC;
+  --ink:#1D2A33; --ink2:#46545C; --muted:#6C7980; --line:#D4DAD8; --line2:#A9B4B1;
+  --ocean:#2C4A7A; --ocean-d:#1F365C; --ocean-t:#E4E9F3;
+  --warn:#A93C2A; --warn-t:#F7E7E2; --ok:#2C6A55;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --serif:"Noto Serif KR","AppleMyungjo","Batang","바탕",serif;
+}
+*{box-sizing:border-box}
+html{color-scheme:light;scroll-padding-top:24px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%;padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+button{font-family:inherit}
+:focus-visible{outline:3px solid #8FA3CC;outline-offset:2px}
+
+/* ---------- 전체 배치 ---------- */
+.app{display:grid;grid-template-columns:minmax(0,780px);justify-content:center;gap:40px;padding:0 16px}
+@media (min-width:1060px){ .app{grid-template-columns:168px minmax(0,780px)} }
+
+/* ---------- 지층 진행 표시 (데스크톱) ---------- */
+.strata{display:none}
+@media (min-width:1060px){
+  .strata{display:block;position:sticky;top:28px;align-self:start;margin-top:150px}
+}
+.strata h2{font-size:13px;font-weight:700;color:var(--ink2);margin:0 0 10px}
+.layer{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:0;margin:0;cursor:pointer;text-align:left;color:var(--ink2);font-size:13px;line-height:1.25}
+.layer .rock{flex:0 0 34px;height:24px;border:1px solid var(--line2);border-top-width:0;background:#fff repeating-linear-gradient(135deg,transparent 0 5px,#E3E7E6 5px 6px)}
+.layer:first-of-type .rock{border-top-width:1px}
+.layer.part .rock{background:var(--c);opacity:.45}
+.layer.done .rock{background:var(--c)}
+.layer.done{color:var(--ink)}
+.layer:hover .label{text-decoration:underline}
+.strata .count{margin-top:12px;font-size:13px;color:var(--ink2)}
+.strata .count b{color:var(--ink);font-size:18px}
+
+/* ---------- 머리 ---------- */
+.mast{padding:28px 0 6px}
+.mast-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.mast .logo-space{height:46px}
+.mast .sub{margin:18px 0 2px;font-size:14px;color:var(--ink2)}
+.mast h1{margin:0;font-size:30px;line-height:1.25;font-weight:800;letter-spacing:-.02em}
+.mast .lead{margin:8px 0 0;color:var(--ink2);font-size:15px}
+.ghost{background:none;border:1px solid var(--line2);color:var(--ink2);border-radius:4px;padding:7px 12px;font-size:13.5px;cursor:pointer}
+.ghost:hover{border-color:var(--ink2);color:var(--ink)}
+
+/* 모바일 지층 띠 */
+.mstrata{position:sticky;top:0;z-index:20;background:var(--paper);padding:10px 0 8px;margin-top:14px}
+.band{display:flex;height:10px;border:1px solid var(--line2)}
+.band span{flex:1;border-left:1px solid #fff;background:#fff repeating-linear-gradient(135deg,transparent 0 4px,#E3E7E6 4px 5px)}
+.band span:first-child{border-left:0}
+.band span.part{background:var(--c);opacity:.45}
+.band span.done{background:var(--c)}
+.mstrata .meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink2);margin-top:4px}
+@media (min-width:1060px){ .mstrata{position:static;padding-top:6px} }
+
+/* ---------- 안내 띠 ---------- */
+.banner{border-radius:6px;padding:12px 14px;margin:12px 0;font-size:14.5px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.banner.info{background:var(--ocean-t);color:var(--ocean-d)}
+.banner.warn{background:var(--warn-t);color:var(--warn)}
+.banner button{flex:0 0 auto}
+.hidden{display:none !important}
+
+/* ---------- 작성 안내 ---------- */
+.guide{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 22px 8px;margin:14px 0 22px}
+.guide h2{margin:0 0 4px;font-size:20px;letter-spacing:-.01em}
+.guide>p{margin:0 0 14px;color:var(--ink2)}
+.pr{border-top:1px solid var(--line);padding:14px 0}
+.pr h3{margin:0 0 4px;font-size:16.5px}
+.pr p{margin:0 0 10px;color:var(--ink2);font-size:15px}
+.cmp{display:grid;grid-template-columns:1fr;gap:8px;font-size:14.5px}
+@media (min-width:640px){ .cmp{grid-template-columns:1fr 1fr} }
+.cmp div{border-radius:4px;padding:10px 12px;line-height:1.55}
+.cmp .bad{background:#F4F1EF;color:#5B4B45}
+.cmp .good{background:var(--ocean-t);color:var(--ocean-d)}
+.cmp b{display:block;font-size:13px;margin-bottom:2px}
+.rules{border-top:1px solid var(--line);padding:14px 0 10px;font-size:14.5px;color:var(--ink2)}
+.rules h3{margin:0 0 6px;font-size:15.5px;color:var(--ink)}
+.rules ul{margin:0;padding-left:18px}
+.rules li{margin:3px 0}
+
+/* ---------- 섹션 ---------- */
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin:0 0 20px;padding:20px 22px 8px;scroll-margin-top:70px}
+@media (max-width:560px){ .sec{padding:18px 16px 6px} .guide{padding:18px 16px 6px} }
+.sec-h{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sec-h .chip-c{flex:0 0 14px;height:30px;background:var(--c)}
+.sec-h .no{font-size:15px;font-weight:800;color:var(--muted);min-width:20px}
+.sec-h h2{margin:0;font-size:19px;letter-spacing:-.01em;flex:1 1 auto}
+.sec-h .note{font-size:12.5px;color:var(--ocean);border:1px solid #BCC7DD;border-radius:999px;padding:2px 10px}
+.sec-intro{margin:12px 0 0;color:var(--ink2);font-size:14.5px}
+
+.f{margin:18px 0}
+.q{display:block;font-weight:700;font-size:15.5px;margin-bottom:2px}
+.q .opt{font-weight:500;color:var(--muted);font-size:13px;margin-left:4px}
+.desc{margin:0 0 8px;color:var(--ink2);font-size:14px}
+textarea,input[type=text],select{width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--field);border:1px solid var(--line2);border-radius:4px;padding:10px 12px;line-height:1.6}
+textarea{min-height:88px;resize:vertical;overflow-y:auto}
+textarea.short{min-height:52px}
+textarea:focus,input[type=text]:focus,select:focus{outline:none;border-color:var(--ocean);box-shadow:0 0 0 3px var(--ocean-t);background:#fff}
+select{appearance:auto;padding:9px 10px}
+.cnt{font-size:12.5px;color:var(--muted);text-align:right;margin-top:3px}
+.cnt.met{color:var(--ok)}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:1fr 1fr}
+.g3m{grid-template-columns:repeat(3,minmax(0,1fr))}
+select:disabled{opacity:.5}
+@media (min-width:600px){ .g2{grid-template-columns:1fr 1fr} .g4{grid-template-columns:1fr 1fr 1fr 1fr} .g3{grid-template-columns:1fr 1fr 1fr} }
+.sid{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink2);margin-top:10px}
+.sid b{font-size:17px;color:var(--ink);letter-spacing:.04em}
+.fixed{padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:#F3F5F5;color:var(--ink2)}
+.flabel{display:block;font-size:13.5px;font-weight:600;color:var(--ink2);margin-bottom:4px}
+
+details.tip{margin:6px 0 8px}
+details.tip summary{cursor:pointer;color:var(--ocean);font-size:13.5px;font-weight:600;list-style-position:inside}
+details.tip div{background:var(--ocean-t);color:var(--ocean-d);border-radius:4px;padding:10px 12px;margin-top:6px;font-size:14px;line-height:1.6}
+
+/* 선택 칩 */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:999px;padding:7px 13px;font-size:14.5px;cursor:pointer;background:#fff;user-select:none;line-height:1.3}
+.chip input{position:absolute;opacity:0;width:1px;height:1px}
+.chip::before{content:"";width:9px;height:9px;border-radius:50%;border:1.5px solid var(--line2);flex:0 0 auto}
+.chip.on{border-color:var(--ocean);background:var(--ocean-t);color:var(--ocean-d);font-weight:600}
+.chip.on::before{background:var(--ocean);border-color:var(--ocean)}
+.chip:focus-within{outline:3px solid #8FA3CC;outline-offset:1px}
+.unit{margin:10px 0 4px;font-size:13.5px;font-weight:700;color:var(--ink2)}
+.code{color:var(--muted);font-size:12.5px;font-weight:500}
+
+/* 반복 행 */
+.row{border:1px solid var(--line);border-left:4px solid var(--c,var(--line2));border-radius:4px;padding:12px 14px 4px;margin:10px 0;background:#FAFBFB}
+.row-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.row-h b{font-size:14px;color:var(--ocean);white-space:nowrap}
+.rm{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 6px;text-decoration:underline}
+.rm:hover{color:var(--warn)}
+.row .f{margin:8px 0 10px}
+.add{width:100%;border:1px dashed var(--line2);background:#fff;color:var(--ocean);border-radius:4px;padding:10px;font-size:14.5px;font-weight:600;cursor:pointer;margin:4px 0 16px}
+.add:hover{border-color:var(--ocean)}
+.add:disabled{color:var(--muted);cursor:default;border-color:var(--line)}
+.factref{background:#fff;border:1px solid var(--line);border-radius:4px;padding:8px 10px;font-size:14.5px;color:var(--ink2);margin-bottom:6px}
+.factref.empty{color:var(--muted);font-style:italic}
+.ladder .f{margin:6px 0 10px}
+.ladder .step{border-left:2px solid var(--line2);margin-left:6px;padding-left:14px}
+.ladder .step .q{font-size:14.5px}
+
+/* 그림 */
+.fig{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:600px){ .fig{grid-template-columns:200px 1fr} }
+.thumb{border:1px dashed var(--line2);border-radius:4px;background:#fff;min-height:140px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:8px;text-align:center;font-size:13.5px;color:var(--muted)}
+.thumb img{max-width:100%;max-height:200px;display:block}
+.thumb label{color:var(--ocean);font-weight:600;cursor:pointer;text-decoration:underline}
+.thumb input{position:absolute;opacity:0;width:1px;height:1px}
+
+/* 미리 보는 질문 */
+.recall{background:#F3F5F5;border-radius:4px;padding:10px 12px;font-size:14.5px;color:var(--ink2);margin:12px 0 0}
+.recall b{color:var(--ink)}
+
+/* ---------- 하단 고정 바 ---------- */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.97);border-top:1px solid var(--line2);padding:8px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.bar .in{max-width:780px;margin:0 auto}
+.status{font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px;min-height:20px;margin-bottom:6px}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--line2);flex:0 0 auto}
+.status.saved .dot{background:var(--ok)}
+.status.pending .dot{background:#C9A54A}
+.status.warn{color:var(--warn)} .status.warn .dot{background:var(--warn)}
+.btns{display:flex;gap:8px}
+.btn{border:1px solid var(--ocean);border-radius:4px;padding:11px 14px;font-size:15px;font-weight:700;cursor:pointer;background:#fff;color:var(--ocean);white-space:nowrap}
+.btn.primary{background:var(--ocean);color:#fff;flex:1 1 auto}
+.btn.primary:hover{background:var(--ocean-d)}
+.btn.sec2{flex:0 0 auto;font-weight:600}
+@media (max-width:420px){ .btn{padding:11px 10px;font-size:14px} }
+
+/* ---------- 모달 ---------- */
+.mask{position:fixed;inset:0;background:rgba(20,30,36,.5);z-index:50;display:none;align-items:center;justify-content:center;padding:18px}
+.mask.show{display:flex}
+.modal{background:#fff;border-radius:6px;max-width:460px;width:100%;max-height:86vh;overflow:auto;padding:22px}
+.modal h3{margin:0 0 8px;font-size:18px}
+.modal p{margin:0 0 12px;font-size:14.5px;color:var(--ink2)}
+.modal ul{margin:0 0 16px;padding-left:18px;font-size:14.5px}
+.modal li{margin:4px 0}
+.modal li button{background:none;border:0;padding:0;font:inherit;color:var(--ocean);cursor:pointer;text-decoration:underline;text-align:left}
+.modal .btns{flex-direction:column}
+
+/* ---------- 미리보기 ---------- */
+#reportWrap{display:none}
+body.preview{padding-bottom:40px}
+body.preview .app, body.preview .bar{display:none}
+body.preview #reportWrap{display:block}
+.pbar{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line2);padding:10px 16px}
+.pbar .in{max-width:210mm;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap}
+.pbar .btn{flex:1 1 auto}
+.phelp{max-width:210mm;margin:12px auto 0;padding:0 16px;font-size:13.5px;color:var(--ink2)}
+.phelp summary{cursor:pointer;color:var(--ocean);font-weight:600}
+.phelp ul{margin:6px 0 0;padding-left:18px}
+#report{max-width:210mm;margin:14px auto;background:#fff;padding:18mm 16mm;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+@media (max-width:640px){ #report{padding:22px 18px;margin:10px} }
+
+/* ================= 보고서 (미리보기·인쇄 공통) ================= */
+.rp{font-family:var(--serif);font-size:10.4pt;line-height:1.75;color:#111;word-break:keep-all;overflow-wrap:anywhere}
+.rp h1,.rp h2,.rp h3,.rp .rp-school,.rp table th,.rp .lab,.rp .tag,.rp .cap,.rp .sumlab{font-family:var(--sans)}
+.rp-school{display:flex;align-items:center;gap:10px;font-size:9pt;color:#444;border-bottom:1.5px solid #111;padding-bottom:6px}
+.rp-school img{height:26px;width:auto}
+.rp-school span{margin-left:auto}
+.rp h1{font-size:19pt;line-height:1.35;margin:16px 0 12px;letter-spacing:-.01em}
+.rp table{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:9.4pt;line-height:1.6}
+.rp th,.rp td{border:1px solid #8F9A97;padding:5px 8px;vertical-align:top;text-align:left}
+.rp th{background:#EEF1F6;font-weight:700;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rp tr{break-inside:avoid;page-break-inside:avoid}
+.rp-info th{width:16%}
+.rp-sum{border-left:4px solid #2C4A7A;background:#F2F4F9;padding:10px 14px;margin:14px 0 6px;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rp-sum .sumh{font-family:var(--sans);font-weight:800;font-size:11pt;margin-bottom:4px}
+.rp-sum dl{margin:0}
+.rp-sum dt{font-family:var(--sans);font-weight:700;font-size:9pt;color:#2C4A7A;margin-top:6px}
+.rp-sum dd{margin:0}
+.rp-sum .qline{font-weight:700}
+.rp h2{font-size:12.5pt;margin:22px 0 6px;padding-top:6px;border-top:1px solid #111;break-after:avoid;page-break-after:avoid}
+.rp h3{font-size:10.6pt;margin:12px 0 3px;break-after:avoid;page-break-after:avoid}
+.rp p{margin:0 0 6px}
+.rp .lab{font-weight:700;font-size:9.4pt;margin-right:6px;color:#2C4A7A}
+.rp .qflow{list-style:none;margin:4px 0 8px;padding:0}
+.rp .qflow li{position:relative;padding:4px 0 6px 18px;border-left:1.5px solid #8F9A97;margin-left:6px;break-inside:avoid}
+.rp .qflow li::before{content:"";position:absolute;left:-5px;top:11px;width:8px;height:8px;border-radius:50%;background:#fff;border:1.5px solid #2C4A7A}
+.rp .qflow li.final::before{background:#2C4A7A}
+.rp .qflow .tag{display:block;font-size:8.6pt;font-weight:700;color:#2C4A7A}
+.rp .qflow .qt{font-weight:700}
+.rp .qflow .why{font-size:9.6pt;color:#333}
+.rp .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rp .two>div{border:1px solid #B9C2BF;padding:6px 10px;break-inside:avoid}
+.rp .two .lab{display:block;margin-bottom:2px}
+.rp figure{margin:10px 0 12px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.rp figure img{max-width:100%;max-height:92mm;width:auto;height:auto;display:block;margin:0 auto;border:1px solid #D0D6D4}
+.rp .cap{font-size:9pt;color:#333;margin-top:5px}
+.rp ol.facts{margin:4px 0 8px;padding-left:22px}
+.rp ol.facts li{margin:2px 0}
+.rp .ana{border:1px solid #B9C2BF;padding:7px 10px 4px;margin:6px 0 8px;break-inside:avoid}
+.rp .ana .fact{font-weight:700}
+.rp .ana .con{font-size:9.4pt;color:#333;margin:2px 0 3px}
+.rp .chain{margin:4px 0 8px;padding:0;list-style:none}
+.rp .chain li{break-inside:avoid;border-left:1.5px solid #8F9A97;padding:3px 0 5px 12px}
+.rp .chain li:nth-child(2){margin-left:14px}
+.rp .chain li:nth-child(3){margin-left:28px}
+.rp .chain li:nth-child(4){margin-left:42px}
+.rp .chain .tag{display:block;font-size:8.6pt;font-weight:700;color:#2C4A7A}
+.rp .refs{margin:4px 0 8px;padding-left:0;list-style:none}
+.rp .refs li{padding-left:30px;text-indent:-30px;margin:3px 0}
+.rp .url{font-size:8.8pt;color:#333;word-break:break-all}
+.rp .tags{margin:2px 0 6px}
+.rp .tagc{display:inline-block;font-family:var(--sans);font-size:8.8pt;border:1px solid #2C4A7A;color:#2C4A7A;border-radius:99px;padding:0 8px;margin:0 4px 3px 0}
+.rp .qa{margin:4px 0 8px;break-inside:avoid}
+.rp .qa p{margin:0 0 2px}
+.rp .appx{margin-top:26px}
+.rp .muted{color:#555}
+
+/* ================= 인쇄 ================= */
+@media print{
+  @page{size:A4;margin:15mm 14mm 16mm}
+  html,body{background:#fff !important;padding:0 !important}
+  .app,.bar,.mask,.pbar,.phelp,.mstrata{display:none !important}
+  #reportWrap{display:block !important}
+  #report{max-width:none;margin:0;padding:0;box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce){ *{scroll-behavior:auto !important} }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- 데스크톱: 진행 표시 -->
+  <nav class="strata" id="strata" aria-label="작성 진행"></nav>
+
+  <main>
+    <header class="mast">
+      <div class="mast-top">
+        <div class="logo-space" aria-hidden="true"></div>
+        <button class="ghost" type="button" onclick="newDoc()">새로 쓰기</button>
+      </div>
+      <p class="sub">2026학년도 2학기 행성우주과학</p>
+      <h1>행성우주과학 자유탐구 보고서</h1>
+      <p class="lead">내가 무엇을, 왜, 어떻게 탐구했는지를 보여 주는 보고서입니다. 칸을 다 채운 뒤 아래 ‘보고서 미리보기’를 누르면 보고서 형식으로 정리되고, 그 화면에서 PDF로 저장할 수 있습니다.</p>
+    </header>
+
+    <!-- 모바일·공통: 진행 띠 -->
+    <div class="mstrata" aria-hidden="true">
+      <div class="band" id="band"></div>
+      <div class="meta"><span id="bandText">0 / 14 완료</span><span>칸을 채울수록 저녁 하늘이 밤하늘로 바뀝니다</span></div>
+    </div>
+
+    <div id="bannerRestore" class="banner info hidden"><span id="restoreText"></span><button class="ghost" type="button" onclick="hide('bannerRestore')">닫기</button></div>
+    <div id="bannerStorage" class="banner warn hidden"><span>이 브라우저에서는 자동 임시저장이 되지 않습니다. 중간에 그만둘 때는 반드시 아래 ‘파일로 저장’을 눌러 주세요.</span></div>
+    <div id="bannerBroken" class="banner warn hidden"><span>임시저장된 내용을 읽지 못했습니다. ‘파일로 저장’해 둔 파일이 있다면 ‘불러오기’로 이어서 쓰세요.</span></div>
+
+    <!-- 작성 안내 -->
+    <section class="guide" aria-labelledby="gTitle">
+      <h2 id="gTitle">이렇게 쓰면 좋은 보고서가 됩니다</h2>
+      <p>이 보고서를 읽는 사람이 세 가지를 바로 알 수 있어야 합니다. 무엇을 탐구했는지, 왜 탐구했는지, 어떻게 탐구했는지입니다.</p>
+
+      <div class="pr">
+        <h3>무엇을, 왜 탐구했는지 분명하게</h3>
+        <p>탐구 질문은 물음표로 끝나는 구체적인 한 문장으로 씁니다. 동기는 ‘관심이 있어서’가 아니라, 질문이 생긴 장면과 그때 무엇이 이상하거나 궁금했는지를 씁니다.</p>
+        <div class="cmp">
+          <div class="bad"><b>아쉬운 예</b>우주에 관심이 많아서 탐구하게 되었다.</div>
+          <div class="good"><b>좋은 예</b>생명가능지대는 중심별의 표면 온도에 따라 달라진다고 배웠는데, 지금까지 발견된 외계 행성 가운데 실제로 그 범위에 드는 행성이 얼마나 되는지 직접 확인하고 싶었다.</div>
+        </div>
+      </div>
+
+      <div class="pr">
+        <h3>과정은 따라 할 수 있을 만큼 구체적으로</h3>
+        <p>어떤 자료를 어디서 구했는지, 어떤 순서로 무엇을 했는지, 왜 그 방법을 골랐는지, 중간에 무엇을 바꿨는지가 보여야 합니다.</p>
+        <div class="cmp">
+          <div class="bad"><b>아쉬운 예</b>인터넷에서 외계 행성 자료를 찾아 정리했다.</div>
+          <div class="good"><b>좋은 예</b>NASA Exoplanet Archive에서 중심별의 표면 온도와 행성의 궤도 긴반지름이 모두 있는 행성만 골라 내려받고, 중심별의 온도 구간별로 생명가능지대 안에 드는 행성의 수를 셌다.</div>
+        </div>
+      </div>
+
+      <div class="pr">
+        <h3>결과는 ‘왜?’까지 설명하기</h3>
+        <p>그래프에 보이는 것을 옮기는 데서 멈추지 말고, 과학 개념으로 그 원인을 설명합니다. 계산을 했다면 사용한 식과 대입한 값도 보여 줍니다. 설명하지 못한 부분은 ‘아직 모름’이라고 솔직하게 쓰고 다음 질문으로 남깁니다.</p>
+        <div class="cmp">
+          <div class="bad"><b>아쉬운 예</b>목성에서 먼 위성일수록 공전 주기가 길었다.</div>
+          <div class="good"><b>좋은 예</b>목성에서 먼 위성일수록 공전 주기가 길었고, 공전 주기의 제곱이 궤도 반지름의 세제곱에 비례했다. 목성의 중력이 위성들을 붙잡아 공전시키기 때문에 케플러 제3법칙이 목성의 위성에도 성립한다고 해석했다.</div>
+        </div>
+      </div>
+
+      <div class="rules">
+        <h3>작성 규칙</h3>
+        <ul>
+          <li>인터넷이나 책의 문장을 옮기지 말고 자신의 언어로 씁니다. 다른 자료를 쓰면 반드시 출처를 밝힙니다.</li>
+          <li>천문 자료는 어느 기관의 어떤 관측(망원경, 탐사선, 관측 프로그램)에서 나온 자료인지 함께 밝힙니다.</li>
+          <li>태양을 관측할 때는 반드시 태양 관측용 필터나 태양 망원경을 사용합니다. 맨눈이나 필터 없는 망원경·쌍안경으로 태양을 보면 눈을 크게 다칠 수 있습니다.</li>
+          <li>AI는 허용된 범위에서만 활용하고, 활용했다면 ‘AI 활용 기록’에 과정을 남깁니다. AI 입력창에 학번, 이름, 학교명 같은 개인정보를 넣지 않습니다.</li>
+        </ul>
+      </div>
+
+      <div class="rules">
+        <h3>임시저장 안내</h3>
+        <ul>
+          <li>쓰는 동안 이 기기의 브라우저에 자동으로 임시저장되며, 화면 아래에 저장 시각이 표시됩니다.</li>
+          <li>이어서 쓸 때는 <b>같은 기기, 같은 브라우저</b>(Chrome, Safari 등)로 다시 여세요. 카카오톡 안에서 열거나 시크릿(비공개) 창에서 쓰면 저장이 남지 않습니다.</li>
+          <li>오랫동안 열지 않으면 브라우저가 임시저장을 지울 수 있고, 사진이 많으면 사진은 임시저장되지 않을 수 있습니다. 중간에 그만둘 때는 <b>‘파일로 저장’</b>도 눌러 두세요.</li>
+          <li>학교 공용 기기에서 썼다면 PDF를 저장한 뒤 맨 위 ‘새로 쓰기’로 내용을 지워 주세요.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 1 기본 정보 -->
+    <section class="sec" id="s1" style="--c:#F0D9B5">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">1</span><h2>기본 정보</h2></div>
+      <div class="f">
+        <div><label class="flabel" for="school">학교</label><select id="school" data-k="school"></select></div>
+        <p class="desc hidden" id="schoolHint" style="margin:6px 0 0">학교를 먼저 고르면 학년, 반, 번호를 고를 수 있습니다.</p>
+        <div class="grid g3m" style="margin-top:12px">
+          <div><label class="flabel" for="grade">학년</label><select id="grade" data-k="grade"></select></div>
+          <div><label class="flabel" for="cls">반</label><select id="cls" data-k="cls"></select></div>
+          <div><label class="flabel" for="no">번호</label><select id="no" data-k="no"></select></div>
+        </div>
+        <div style="margin-top:12px"><label class="flabel" for="name">이름</label><input type="text" id="name" data-k="name" autocomplete="off" placeholder="이름"></div>
+        <div class="sid">학교·학번 <b id="sidText">-</b></div>
+      </div>
+    </section>
+
+    <!-- 2 탐구 개요 -->
+    <section class="sec" id="s2" style="--c:#E8C29A">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">2</span><h2>탐구 개요</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <div class="f">
+        <label class="q" for="title">탐구 주제 (보고서 제목)</label>
+        <p class="desc">보고서 맨 위에 제목으로 들어갑니다. 무엇을 탐구했는지 드러나게 쓰세요.</p>
+        <input type="text" id="title" data-k="title" placeholder="예: 통과 관측 자료로 외계 행성의 크기 추정하기">
+        <details class="tip"><summary>주제가 잘 떠오르지 않을 때 (교육과정의 탐구 활동 예시)</summary><div>망원경으로 행성 관측하기 · 중심별의 표면 온도에 따른 생명가능지대 추론하기 · 태양 활동 감시 시스템이 실생활과 어떻게 관련되는지 조사하기 · 흑점의 이동 자료로 태양의 자전 주기 구하기 · 별자리를 이루는 별들의 공간 분포를 입체로 나타내기 · 쌍성 자료로 주계열성의 질량-광도 관계 구하기 · 주계열 맞추기로 성단까지의 거리 구하기 · 세페이드 변광성으로 우리은하의 중심과 크기 구하기 · 은하의 공간 분포 자료에서 은하단과 보이드 찾기<br>이 예시를 그대로 하기보다, 여기서 생긴 나만의 질문으로 좁혀 보세요.</div></details>
+      </div>
+      <div class="f">
+        <span class="q">탐구 유형 <span class="opt">여러 개 선택 가능</span></span>
+        <div class="chips" data-chips="types" id="typesBox"></div>
+        <input type="text" class="hidden" id="typeEtc" data-k="typeEtc" placeholder="기타 탐구 유형을 적어 주세요" style="margin-top:8px">
+      </div>
+      <div class="f">
+        <span class="q">관련 성취기준 <span class="opt">여러 개 선택 가능</span></span>
+        <div id="stdBox"></div>
+      </div>
+    </section>
+
+    <!-- 3 탐구 동기 -->
+    <section class="sec" id="s3" style="--c:#D9A58A">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">3</span><h2>탐구 동기</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <p class="sec-intro">읽는 사람이 ‘이 학생은 이래서 이 탐구를 시작했구나’ 하고 납득할 수 있게 써 주세요.</p>
+      <div class="f">
+        <label class="q" for="m_moment">이 질문이 처음 떠오른 순간은 언제였나요?</label>
+        <p class="desc">수업의 한 장면, 뉴스나 영상, 일상에서 겪은 일, 진로 관심처럼 구체적인 상황을 쓰세요.</p>
+        <textarea id="m_moment" data-k="m_moment" data-min="80" placeholder="언제, 어디서, 무엇을 보고 들었나요?"></textarea>
+      </div>
+      <div class="f">
+        <label class="q" for="m_why">그때 무엇이 궁금했고, 왜 그냥 넘어갈 수 없었나요?</label>
+        <p class="desc">내가 알고 있던 것과 어긋난 점, 교과서로는 설명되지 않던 점을 쓰세요.</p>
+        <textarea id="m_why" data-k="m_why" data-min="100"></textarea>
+      </div>
+      <div class="f">
+        <label class="q" for="m_meaning">이 탐구는 나에게, 또는 우리 사회에 어떤 의미가 있나요?</label>
+        <textarea id="m_meaning" data-k="m_meaning" data-min="60"></textarea>
+      </div>
+    </section>
+
+    <!-- 4 탐구 질문과 가설 -->
+    <section class="sec" id="s4" style="--c:#C38C8E">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">4</span><h2>탐구 질문과 가설</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <p class="sec-intro">처음 질문이 어떻게 다듬어졌는지가 보고서에 흐름으로 정리됩니다. 질문을 바꾼 이유가 생각의 과정을 보여 줍니다.</p>
+      <div class="f">
+        <label class="q" for="q_first">처음 떠오른 질문</label>
+        <textarea class="short" id="q_first" data-k="q_first" placeholder="예: 외계 행성은 어떻게 찾을까?"></textarea>
+      </div>
+      <div class="f">
+        <label class="q" for="q_second">중간에 다듬은 질문 <span class="opt">있다면</span></label>
+        <textarea class="short" id="q_second" data-k="q_second" placeholder="예: 행성이 별 앞을 지나가면 별의 밝기는 얼마나 줄어들까?"></textarea>
+        <textarea class="short" id="q_second_reason" data-k="q_second_reason" placeholder="이렇게 바꾼 이유" style="margin-top:8px"></textarea>
+      </div>
+      <div class="f">
+        <label class="q" for="q_final">최종 탐구 질문</label>
+        <p class="desc">물음표로 끝나는 한 문장으로, 자료나 실험으로 확인할 수 있을 만큼 구체적으로 쓰세요.</p>
+        <textarea class="short" id="q_final" data-k="q_final" placeholder="예: 통과 관측에서 별의 밝기가 줄어든 비율로 외계 행성의 크기를 추정할 수 있을까?"></textarea>
+        <textarea class="short" id="q_final_reason" data-k="q_final_reason" placeholder="최종 질문으로 바꾼 이유" style="margin-top:8px"></textarea>
+      </div>
+      <div class="f">
+        <span class="q">탐구 전 나의 지식</span>
+        <div class="grid g2">
+          <div><label class="flabel" for="k_know">이미 알고 있던 것 (교과서 개념 포함)</label><textarea id="k_know" data-k="k_know" data-min="60"></textarea></div>
+          <div><label class="flabel" for="k_unknown">아직 몰라서 탐구로 확인해야 할 것</label><textarea id="k_unknown" data-k="k_unknown" data-min="60"></textarea></div>
+        </div>
+      </div>
+      <div class="f">
+        <label class="q" for="h_hyp">가설 (예상 답)</label>
+        <p class="desc">‘~일 것이다’ 형태로 쓰세요. 문헌·사례 조사형 탐구라면 예상 답을 씁니다.</p>
+        <textarea class="short" id="h_hyp" data-k="h_hyp"></textarea>
+      </div>
+      <div class="f">
+        <label class="q" for="h_basis">그렇게 예상한 근거</label>
+        <p class="desc">근거에는 행성우주과학에서 배운 개념을 활용하세요.</p>
+        <textarea id="h_basis" data-k="h_basis" data-min="80"></textarea>
+      </div>
+    </section>
+
+    <!-- 5 탐구 방법 -->
+    <section class="sec" id="s5" style="--c:#A67B98">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">5</span><h2>탐구 방법</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <p class="sec-intro">보고서에서 가장 중요한 부분 중 하나입니다. 읽는 사람이 그대로 따라 할 수 있을 만큼 순서대로 써 주세요.</p>
+      <div class="f">
+        <span class="q">탐구 절차</span>
+        <p class="desc">실제로 한 일을 순서대로 한 단계씩 적습니다.</p>
+        <details class="tip"><summary>자료·도구 예시 보기</summary><div>탐사선 이미지(NASA Photojournal), 외계 행성 자료(NASA Exoplanet Archive), 소행성·혜성 자료(JPL Small-Body Database), 우주기상 정보(NOAA 우주기상예보센터), 태양 관측 영상(Helioviewer, SDO), 별 자료(ESA Gaia), 은하 자료(SDSS SkyServer), 한국천문연구원 자료, 천체 관측 프로그램(Stellarium 등), 스프레드시트·파이썬, 천체 망원경과 스마트폰 카메라<br><b>태양을 관측할 때는 반드시 태양 관측용 필터나 태양 망원경을 사용하세요.</b></div></details>
+        <div id="list_steps"></div>
+      </div>
+      <div class="f">
+        <label class="q" for="why_method">왜 이 방법을 골랐나요?</label>
+        <p class="desc">고려했던 다른 방법이 있다면 무엇이었고, 왜 이 방법이 탐구 질문에 답하기에 더 알맞다고 판단했나요?</p>
+        <textarea id="why_method" data-k="why_method" data-min="80"></textarea>
+      </div>
+      <div class="f" id="cmpBox">
+        <span class="q">비교 기준과 조건 <span class="opt">자료 분석·관측·시뮬레이션·계산·실험</span></span>
+        <div class="grid g3">
+          <div><label class="flabel" for="cmp_var">비교하거나 바꾼 것</label><textarea class="short" id="cmp_var" data-k="cmp_var"></textarea></div>
+          <div><label class="flabel" for="cmp_same">같게 유지한 조건</label><textarea class="short" id="cmp_same" data-k="cmp_same"></textarea></div>
+          <div><label class="flabel" for="cmp_measure">측정하거나 관찰한 것</label><textarea class="short" id="cmp_measure" data-k="cmp_measure"></textarea></div>
+        </div>
+      </div>
+      <div class="f hidden" id="caseBox">
+        <label class="q" for="case_criteria">사례나 자료를 고르고 비교한 기준 <span class="opt">문헌·사례 조사</span></label>
+        <textarea id="case_criteria" data-k="case_criteria" data-min="60"></textarea>
+      </div>
+      <div class="f hidden" id="obsBox">
+        <span class="q">관측 조건 <span class="opt">망원경·맨눈 관측</span></span>
+        <p class="desc">관측 결과는 언제, 어디서, 무엇으로 보았는지에 따라 달라집니다. 다른 사람이 같은 조건으로 다시 관측할 수 있게 적어 주세요.</p>
+        <div class="grid g2">
+          <div><label class="flabel" for="obs_when">관측 일시</label><input type="text" id="obs_when" data-k="obs_when" placeholder="예: 2026. 10. 12. 21:00~22:30"></div>
+          <div><label class="flabel" for="obs_where">관측 장소</label><input type="text" id="obs_where" data-k="obs_where" placeholder="예: 집 옥상"></div>
+          <div><label class="flabel" for="obs_gear">관측 기구</label><input type="text" id="obs_gear" data-k="obs_gear" placeholder="예: 구경 80mm 굴절 망원경, 스마트폰 카메라"></div>
+          <div><label class="flabel" for="obs_sky">하늘 상태</label><input type="text" id="obs_sky" data-k="obs_sky" placeholder="예: 맑음, 달빛이 밝음"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 탐구 결과 -->
+    <section class="sec" id="s6" style="--c:#8A6E9E">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">6</span><h2>탐구 결과</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <div class="f">
+        <span class="q">표·그래프·사진 <span class="opt">최대 4장</span></span>
+        <p class="desc">그래프에는 제목, 축 이름, 단위가 보이게 하세요. 다른 자료에서 가져온 그림은 출처를 적습니다. PDF에서는 그림 아래에 번호와 설명이 붙습니다.</p>
+        <div id="list_figs"></div>
+      </div>
+      <div class="f">
+        <span class="q">결과에서 확인한 사실</span>
+        <p class="desc">해석이나 의견 없이 자료에서 <b>보이는 것</b>만 씁니다. 예: 이오의 공전 주기는 약 1.8일, 칼리스토는 약 16.7일이었다.</p>
+        <div id="list_facts"></div>
+      </div>
+    </section>
+
+    <!-- 7 분석 및 해석 -->
+    <section class="sec" id="s7" style="--c:#6F64A0">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">7</span><h2>분석 및 해석</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <p class="sec-intro">결과를 과학 개념으로 ‘왜?’까지 설명하는 부분입니다. 앞에서 쓴 사실마다 칸이 자동으로 만들어집니다. 계산을 했다면 사용한 식과 대입한 값을 함께 쓰면 과정이 잘 드러납니다.</p>
+      <div class="f"><span class="q">확인한 사실을 과학 개념으로 설명하기</span><div id="list_ana"></div></div>
+
+      <div class="f ladder">
+        <span class="q">‘왜?’ 사다리</span>
+        <p class="desc">가장 중요한 결과 하나를 골라 ‘왜?’를 세 번 이어서 물어보세요. 답을 찾지 못한 단계는 ‘아직 모름’이라고 쓰고, 9번의 새 질문으로 이어 가세요. 어디까지 설명할 수 있는지 아는 것도 중요한 과학적 사고입니다.</p>
+        <div class="f"><label class="q" for="why_result">결과</label><textarea class="short" id="why_result" data-k="why_result"></textarea></div>
+        <div class="step"><div class="f"><label class="q" for="why1">왜?</label><textarea class="short" id="why1" data-k="why1"></textarea></div>
+          <div class="step"><div class="f"><label class="q" for="why2">그것은 왜?</label><textarea class="short" id="why2" data-k="why2"></textarea></div>
+            <div class="step"><div class="f"><label class="q" for="why3">그것은 또 왜?</label><textarea class="short" id="why3" data-k="why3"></textarea></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="f">
+        <span class="q">가설과 비교하면</span>
+        <div class="chips" data-radio="hyp_match" id="hypBox"></div>
+        <textarea id="hyp_reason" data-k="hyp_reason" data-min="60" placeholder="그렇게 된 이유는 무엇이라고 생각하나요?" style="margin-top:8px"></textarea>
+      </div>
+      <div class="f">
+        <label class="q" for="alt">다르게 해석할 가능성</label>
+        <p class="desc">예상과 다르거나 설명하기 어려운 결과가 있었나요? 없었다면, 같은 결과를 다른 원인으로도 설명할 수 있는지 생각해 보세요.</p>
+        <textarea id="alt" data-k="alt" data-min="60"></textarea>
+      </div>
+    </section>
+
+    <!-- 8 결론 -->
+    <section class="sec" id="s8" style="--c:#5B5C9C">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">8</span><h2>결론</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <div class="recall" id="recallQ"></div>
+      <div class="f">
+        <label class="q" for="c_answer">탐구 질문에 대한 나의 답</label>
+        <p class="desc">근거를 넣어 세 문장 안팎으로 씁니다.</p>
+        <textarea id="c_answer" data-k="c_answer" data-min="80"></textarea>
+      </div>
+      <div class="f">
+        <span class="q">이 결론을 얼마나 확신할 수 있나요?</span>
+        <div class="chips" data-radio="c_conf" id="confBox"></div>
+        <textarea id="c_conf_reason" data-k="c_conf_reason" data-min="40" placeholder="자료의 양과 기간, 측정 오차, 비교 대상 등을 생각해 판단한 이유를 쓰세요." style="margin-top:8px"></textarea>
+      </div>
+    </section>
+
+    <!-- 9 한계와 후속 탐구 -->
+    <section class="sec" id="s9" style="--c:#4A5594">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">9</span><h2>한계와 후속 탐구</h2><span class="note">주제 선정 및 탐구 내용</span></div>
+      <div class="f"><span class="q">탐구의 한계와 개선 방안</span><div id="list_limits"></div></div>
+      <div class="f">
+        <label class="q" for="new_q">탐구를 마치고 새롭게 생긴 질문</label>
+        <p class="desc">‘왜?’ 사다리에서 ‘아직 모름’으로 남은 질문도 여기에 이어 쓰세요.</p>
+        <textarea id="new_q" data-k="new_q" data-min="40"></textarea>
+      </div>
+      <div class="f">
+        <span class="q">연계와 확장</span>
+        <div class="grid">
+          <div><label class="flabel" for="link_unit">다른 행성우주과학 단원과의 연결</label><textarea class="short" id="link_unit" data-k="link_unit"></textarea></div>
+          <div><label class="flabel" for="link_subject">다른 교과(물리학, 지구과학, 수학, 정보 등)와의 연결</label><textarea class="short" id="link_subject" data-k="link_subject"></textarea></div>
+          <div><label class="flabel" for="link_career">사회 문제나 나의 진로와의 연결</label><textarea class="short" id="link_career" data-k="link_career"></textarea></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 참고 자료 -->
+    <section class="sec" id="s10" style="--c:#3F4D88">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">10</span><h2>참고 자료와 출처</h2><span class="note">자료의 신뢰성 및 활용</span></div>
+      <p class="sec-intro">인터넷 주소만 쓰지 말고 누가 만든 자료인지 함께 씁니다. 천문 자료는 어느 기관의 어떤 관측(망원경, 탐사선)에서 나온 것인지 밝히면 신뢰성이 높아집니다. 연구기관 자료, 도서, 논문, 기사처럼 서로 다른 종류의 자료를 쓰면 좋습니다.</p>
+      <div class="f"><div id="list_refs"></div></div>
+      <div class="f">
+        <label class="q" for="conflict">자료끼리 내용이 다르거나 충돌한 적이 있나요?</label>
+        <p class="desc">있었다면 어떤 자료를 더 믿었고 그 이유는 무엇인가요? 없었다면 여러 자료가 일치하는지 어떻게 확인했는지 쓰세요.</p>
+        <textarea id="conflict" data-k="conflict" data-min="40"></textarea>
+      </div>
+    </section>
+
+    <!-- 11 탐구를 마치며 -->
+    <section class="sec" id="s11" style="--c:#36457A">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">11</span><h2>탐구를 마치며</h2></div>
+      <div class="f">
+        <span class="q">생각의 변화</span>
+        <div class="grid g2">
+          <div><label class="flabel" for="r_before">탐구 전, 나는 이렇게 생각했다</label><textarea id="r_before" data-k="r_before"></textarea></div>
+          <div><label class="flabel" for="r_after">탐구 후, 이렇게 생각하게 되었다</label><textarea id="r_after" data-k="r_after"></textarea></div>
+        </div>
+      </div>
+      <div class="f">
+        <label class="q" for="r_hard">가장 어려웠던 순간과 그것을 해결한 나의 방법</label>
+        <textarea id="r_hard" data-k="r_hard" data-min="80"></textarea>
+      </div>
+      <div class="f">
+        <span class="q">이 탐구에서 드러난 나의 강점 <span class="opt">여러 개 선택 가능</span></span>
+        <div class="chips" data-chips="strengths" id="strBox"></div>
+        <input type="text" class="hidden" id="strengthEtc" data-k="strengthEtc" placeholder="기타 강점을 적어 주세요" style="margin-top:8px">
+        <textarea id="r_scene" data-k="r_scene" data-min="60" placeholder="고른 강점이 실제로 드러난 장면을 구체적으로 쓰세요." style="margin-top:8px"></textarea>
+      </div>
+    </section>
+
+    <!-- 12 발표 준비 -->
+    <section class="sec" id="s12" style="--c:#2E3D6C">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">12</span><h2>발표 준비</h2><span class="note">발표 구성 및 전달</span></div>
+      <p class="sec-intro">대본을 읽기보다 스스로 정리한 내용을 전달할 수 있도록, 문장이 아니라 키워드로 흐름을 정리해 두고 연습하세요.</p>
+      <div class="f">
+        <label class="q" for="p_message">청중이 꼭 기억했으면 하는 한 문장</label>
+        <textarea class="short" id="p_message" data-k="p_message"></textarea>
+      </div>
+      <div class="f">
+        <span class="q">발표 흐름 <span class="opt">키워드로</span></span>
+        <div id="flowBox"></div>
+      </div>
+      <div class="f">
+        <span class="q">예상 질문과 나의 답</span>
+        <p class="desc">‘왜 그렇게 되나요?’, ‘그 결론을 어떻게 확신하나요?’, ‘다른 설명은 없나요?’ 같은 질문을 미리 생각해 보세요.</p>
+        <div id="list_qa"></div>
+      </div>
+    </section>
+
+    <!-- 13 AI 활용 기록 -->
+    <section class="sec" id="s13" style="--c:#27355E">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">13</span><h2>AI 활용 기록</h2></div>
+      <div class="f">
+        <span class="q">이 탐구에서 AI를 활용했나요?</span>
+        <div class="chips" data-radio="ai_used" id="aiBox"></div>
+      </div>
+      <div class="f hidden" id="aiRows">
+        <p class="desc">AI의 답변은 사실과 다를 수 있으니 반드시 다른 자료로 확인하고, 보고서는 자신의 언어로 씁니다.</p>
+        <div id="list_ai"></div>
+      </div>
+    </section>
+
+    <!-- 14 탐구 요약 -->
+    <section class="sec" id="s14" style="--c:#1F2C50">
+      <div class="sec-h"><span class="chip-c"></span><span class="no">14</span><h2>탐구 요약</h2></div>
+      <p class="sec-intro">보고서 첫 페이지 맨 위에 들어가는 요약입니다. 다른 항목을 모두 쓴 뒤 마지막에, 각각 한두 문장으로 씁니다.</p>
+      <div class="recall" id="recallQ2"></div>
+      <div class="f"><label class="q" for="s_why">왜 이 탐구를 했나요?</label><textarea class="short" id="s_why" data-k="s_why"></textarea></div>
+      <div class="f"><label class="q" for="s_how">어떻게 탐구했나요?</label><textarea class="short" id="s_how" data-k="s_how"></textarea></div>
+      <div class="f"><label class="q" for="s_found">무엇을 알아냈나요?</label><textarea class="short" id="s_found" data-k="s_found"></textarea></div>
+    </section>
+
+      </main>
+</div>
+
+<!-- 하단 고정 바 -->
+<div class="bar">
+  <div class="in">
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">임시저장 준비 중</span></div>
+    <div class="btns">
+      <button class="btn primary" type="button" onclick="startPreview()">보고서 미리보기</button>
+      <button class="btn sec2" type="button" onclick="saveFile()">파일로 저장</button>
+      <button class="btn sec2" type="button" onclick="document.getElementById('fileInput').click()">불러오기</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" class="hidden" onchange="onLoadFile(event)">
+  </div>
+</div>
+
+<!-- 미리보기 -->
+<div id="reportWrap">
+  <div class="pbar"><div class="in">
+    <button class="btn" type="button" onclick="endPreview()">작성으로 돌아가기</button>
+    <button class="btn primary" type="button" onclick="printNow()">PDF로 저장</button>
+  </div></div>
+  <details class="phelp">
+    <summary>PDF로 저장하는 방법</summary>
+    <ul>
+      <li>컴퓨터(Chrome, Edge): 대상을 ‘PDF로 저장’으로 고르고 저장합니다. ‘설정 더보기’에서 ‘머리글과 바닥글’을 끄면 깔끔합니다.</li>
+      <li>안드로이드: 프린터 선택에서 ‘PDF로 저장’을 고른 뒤 다운로드 버튼을 누릅니다.</li>
+      <li>아이폰·아이패드: 인쇄 화면 위쪽의 공유 버튼을 누르고 ‘파일에 저장’을 고릅니다.</li>
+      <li>버튼이 반응하지 않으면 카카오톡 같은 앱 안이 아니라 Safari나 Chrome에서 열었는지 확인하세요.</li>
+    </ul>
+  </details>
+  <div id="report" class="rp"></div>
+</div>
+
+<!-- 빈 항목 확인 -->
+<div class="mask" id="checkMask" role="dialog" aria-modal="true" aria-labelledby="checkTitle">
+  <div class="modal">
+    <h3 id="checkTitle">아직 비어 있는 항목이 있어요</h3>
+    <p>아래 항목을 채우면 더 완성도 있는 보고서가 됩니다. 항목을 누르면 그 위치로 이동합니다.</p>
+    <ul id="missingList"></ul>
+    <div class="btns">
+      <button class="btn primary" type="button" onclick="closeMask('checkMask')">돌아가서 채우기</button>
+      <button class="btn" type="button" onclick="closeMask('checkMask');openPreview()">이대로 미리보기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 앱 안 브라우저 안내 -->
+<div class="mask" id="inappMask" role="dialog" aria-modal="true" aria-labelledby="inappTitle">
+  <div class="modal">
+    <h3 id="inappTitle">Safari나 Chrome에서 열어 주세요</h3>
+    <p>카카오톡 같은 앱 안에서는 임시저장, 파일 저장, PDF 저장이 제대로 되지 않습니다. 오른쪽 위 메뉴(⋮ 또는 공유)에서 ‘다른 브라우저로 열기’를 눌러 주세요.</p>
+    <div class="btns"><button class="btn" type="button" onclick="closeMask('inappMask')">확인</button></div>
+  </div>
+</div>
+
+<script>
+/* ================= 고정 데이터 ================= */
+const KEY = 'online-planetspace-inquiry-2026-2';
+const APP = 'planetspace-inquiry';
+const SCHOOLS = ['벌교고','지명고','화원고'];
+const GRADES = [1,2,3];
+const MAX_CLASS = 10;
+const MAX_NO = 35;
+const CIRC = ['①','②','③','④','⑤','⑥','⑦','⑧'];
+const TYPES = [['data','천문·우주 관측 자료 분석'],['sim','시뮬레이션·천체 관측 프로그램'],['obs','망원경·맨눈 천체 관측'],['calc','계산·코딩 (스프레드시트, 파이썬)'],['exp','실험·모형 제작'],['lit','문헌·탐사 사례 조사'],['etc','기타']];
+const STDS = [
+  ['Ⅰ. 우주탐사와 행성계', [['12행우01-01','태양계 탐사선의 성과와 우주탐사'],['12행우01-02','우주 위험 감시'],['12행우01-03','케플러 법칙과 태양계 천체의 운동'],['12행우01-04','행성과 소천체'],['12행우01-05','외계 행성계와 생명체 존재 가능성']]],
+  ['Ⅱ. 태양과 별의 관측', [['12행우02-01','태양의 광구와 대기, 다파장 관측'],['12행우02-02','별까지의 거리 측정'],['12행우02-03','별의 공간 운동'],['12행우02-04','쌍성과 별의 질량'],['12행우02-05','변광성과 초신성']]],
+  ['Ⅲ. 은하와 우주', [['12행우03-01','성단과 우리은하의 구조'],['12행우03-02','성간 소광과 성간 티끌'],['12행우03-03','은하의 회전 속도 곡선과 빛을 내지 않는 물질'],['12행우03-04','외부은하의 적색 편이 탐사'],['12행우03-05','은하의 분포와 우주의 거시 구조']]]
+];
+const STRENGTHS = ['끈기','자료 분석력','비판적 사고','창의적 발상','꼼꼼함·정확성','협력·소통','기타'];
+const HYP = ['일치','부분적으로 일치','불일치'];
+const CONF = ['확신함','대체로 확신함','확신하기 어려움'];
+const AIU = ['활용하지 않음','활용함'];
+const REF_TYPES = ['공공데이터','도서','논문','기사','웹사이트','영상','기타'];
+const AI_STAGES = ['주제 탐색','자료 검색','개념 확인','분석 방법 점검','표현 점검','기타'];
+const FLOW = ['도입 (탐구 동기)','탐구 질문과 가설','탐구 방법','결과','해석 (‘왜?’)','결론과 후속 질문'];
+const SECS = [
+  ['s1','기본 정보','#F0D9B5'],['s2','탐구 개요','#E8C29A'],['s3','탐구 동기','#D9A58A'],['s4','질문과 가설','#C38C8E'],
+  ['s5','탐구 방법','#A67B98'],['s6','탐구 결과','#8A6E9E'],['s7','분석 및 해석','#6F64A0'],['s8','결론','#5B5C9C'],
+  ['s9','한계와 후속 탐구','#4A5594'],['s10','참고 자료','#3F4D88'],['s11','탐구를 마치며','#36457A'],['s12','발표 준비','#2E3D6C'],
+  ['s13','AI 활용 기록','#27355E'],['s14','탐구 요약','#1F2C50']
+];
+
+/* ================= 상태 ================= */
+function blank(){
+  return {
+    v:1, school:'', grade:'', cls:'', no:'', name:'', title:'', types:[], typeEtc:'', stds:[],
+    m_moment:'', m_why:'', m_meaning:'',
+    q_first:'', q_second:'', q_second_reason:'', q_final:'', q_final_reason:'',
+    k_know:'', k_unknown:'', h_hyp:'', h_basis:'',
+    steps:[{do:'',tool:''},{do:'',tool:''},{do:'',tool:''}],
+    why_method:'', cmp_var:'', cmp_same:'', cmp_measure:'', case_criteria:'', obs_when:'', obs_where:'', obs_gear:'', obs_sky:'',
+    figs:[],
+    facts:[{text:'',concept:'',explain:''},{text:'',concept:'',explain:''},{text:'',concept:'',explain:''}],
+    why_result:'', why1:'', why2:'', why3:'', hyp_match:'', hyp_reason:'', alt:'',
+    c_answer:'', c_conf:'', c_conf_reason:'',
+    limits:[{limit:'',effect:'',redo:''}], new_q:'', link_unit:'', link_subject:'', link_career:'',
+    refs:[{title:'',author:'',date:'',type:'',url:'',trust:''},{title:'',author:'',date:'',type:'',url:'',trust:''}], conflict:'',
+    r_before:'', r_after:'', r_hard:'', strengths:[], strengthEtc:'', r_scene:'',
+    p_message:'', p_flow:['','','','','',''], qa:[{q:'',a:''},{q:'',a:''},{q:'',a:''}],
+    ai_used:'', ai:[{stage:'',tool:'',prompt:'',summary:'',check:''}],
+    s_why:'', s_how:'', s_found:''
+  };
+}
+/* 불러온 데이터의 모양을 안전하게 맞춘다 (빠진 항목은 기본값으로) */
+function normalize(d){
+  const b = blank();
+  if(!d || typeof d !== 'object') return b;
+  const out = {};
+  for(const k in b){
+    const def = b[k], v = d[k];
+    if(Array.isArray(def)){
+      if(!Array.isArray(v)){ out[k] = def; continue; }
+      if(def.length && typeof def[0] === 'object'){
+        const tmpl = def[0];
+        out[k] = v.filter(x=>x && typeof x==='object').map(x=>{ const o={}; for(const c in tmpl) o[c] = typeof x[c]==='string' ? x[c] : ''; return o; });
+      } else if(k==='p_flow'){
+        out[k] = [0,1,2,3,4,5].map(i=> typeof v[i]==='string' ? v[i] : '');
+      } else if(k==='figs'){
+        out[k] = v.filter(x=>x && typeof x==='object').map(x=>({src:typeof x.src==='string'?x.src:'', cap:typeof x.cap==='string'?x.cap:'', source:typeof x.source==='string'?x.source:''})).slice(0,4);
+      } else {
+        out[k] = v.filter(x=>typeof x==='string');
+      }
+    } else {
+      out[k] = (typeof v === 'string' || typeof v === 'number') ? String(v) : def;
+    }
+  }
+  ['steps','facts','limits','refs','qa','ai'].forEach(k=>{ if(!out[k].length) out[k] = [ {...b[k][0]} ]; });
+  out.v = 1;
+  return out;
+}
+let S = blank();
+
+/* ================= 유틸 ================= */
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function has(s){ return typeof s==='string' && s.trim().length>0; }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function sid(){ return (S.grade && S.cls && S.no) ? String(S.grade)+pad2(S.cls)+pad2(S.no) : ''; }
+function hide(id){ $(id).classList.add('hidden'); }
+function show(id){ $(id).classList.remove('hidden'); }
+function closeMask(id){ $(id).classList.remove('show'); }
+function timeText(t){ const d=new Date(t); const h=d.getHours(); return `${d.getMonth()+1}월 ${d.getDate()}일 ${h<12?'오전':'오후'} ${((h+11)%12)+1}:${pad2(d.getMinutes())}`; }
+
+/* ================= 화면 만들기 ================= */
+function buildStatic(){
+  $('school').innerHTML = '<option value="">학교 선택</option>' + SCHOOLS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  $('grade').innerHTML = '<option value="">학년</option>' + GRADES.map(c=>`<option value="${c}">${c}학년</option>`).join('');
+  let co='<option value="">반</option>'; for(let i=1;i<=MAX_CLASS;i++) co+=`<option value="${i}">${i}반</option>`; $('cls').innerHTML=co;
+  const no = $('no'); let o='<option value="">번호</option>'; for(let i=1;i<=MAX_NO;i++) o+=`<option value="${i}">${i}번</option>`; no.innerHTML=o;
+  $('typesBox').innerHTML = TYPES.map(([v,t])=>chip('checkbox','types',v,t)).join('');
+  $('stdBox').innerHTML = STDS.map(([u,items])=>`<div class="unit">${u}</div><div class="chips" data-chips="stds">${items.map(([c,t])=>chip('checkbox','stds',c,`${t} <span class="code">[${c}]</span>`)).join('')}</div>`).join('');
+  $('strBox').innerHTML = STRENGTHS.map(t=>chip('checkbox','strengths',t,t)).join('');
+  $('hypBox').innerHTML = HYP.map(t=>chip('radio','hyp_match',t,t)).join('');
+  $('confBox').innerHTML = CONF.map(t=>chip('radio','c_conf',t,t)).join('');
+  $('aiBox').innerHTML = AIU.map(t=>chip('radio','ai_used',t,t)).join('');
+  $('flowBox').innerHTML = FLOW.map((t,i)=>`<div class="f" style="margin:8px 0"><label class="flabel" for="flow${i}">${i+1}. ${t}</label><input type="text" id="flow${i}" data-flow="${i}" placeholder="핵심 키워드"></div>`).join('');
+  // 지층 표시
+  $('strata').innerHTML = '<h2>작성 진행</h2>' + SECS.map(([id,n,c])=>`<button type="button" class="layer" data-sec="${id}" style="--c:${c}" onclick="jump('${id}')"><span class="rock"></span><span class="label">${n}</span></button>`).join('') + '<div class="count"><b id="cntDone">0</b> / 14 완료</div>';
+  $('band').innerHTML = SECS.map(([id,n,c])=>`<span data-sec="${id}" style="--c:${c}" title="${n}"></span>`).join('');
+}
+function chip(type,group,val,label){
+  const name = type==='radio' ? `name="${group}"` : '';
+  return `<label class="chip"><input type="${type}" ${name} data-group="${group}" value="${esc(val)}">${label}</label>`;
+}
+function jump(id){ const el=$(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+
+/* ----- 반복 행 정의 ----- */
+const LISTS = {
+  steps:{min:1,max:10,c:'#A67B98',head:i=>`${i+1}단계`,add:'+ 단계 추가',make:()=>({do:'',tool:''}),fields:[
+    {c:'do',t:'ta',lab:'한 일',ph:'예: NASA Exoplanet Archive에서 통과 관측으로 발견되었고 중심별의 반지름 자료가 있는 행성 20개를 골랐다.'},
+    {c:'tool',t:'in',lab:'사용한 자료·도구',ph:'예: NASA Exoplanet Archive, 스프레드시트'}]},
+  facts:{min:1,max:6,c:'#8A6E9E',head:i=>`사실 ${CIRC[i]}`,add:'+ 사실 추가',make:()=>({text:'',concept:'',explain:''}),fields:[
+    {c:'text',t:'ta',cls:'short',ph:'자료에서 보이는 것만 씁니다.'}]},
+  limits:{min:1,max:4,c:'#4A5594',head:i=>`한계 ${i+1}`,add:'+ 한계 추가',make:()=>({limit:'',effect:'',redo:''}),fields:[
+    {c:'limit',t:'ta',cls:'short',lab:'탐구의 한계'},{c:'effect',t:'ta',cls:'short',lab:'결과에 미쳤을 영향'},{c:'redo',t:'ta',cls:'short',lab:'다시 한다면 이렇게 하겠다'}]},
+  refs:{min:1,max:10,c:'#3F4D88',head:i=>`자료 [${i+1}]`,add:'+ 자료 추가',make:()=>({title:'',author:'',date:'',type:'',url:'',trust:''}),grid:true,fields:[
+    {c:'title',t:'in',lab:'자료명(제목)',wide:true},{c:'author',t:'in',lab:'만든 사람·기관'},{c:'date',t:'in',lab:'발행일 또는 검색일',ph:'예: 2026. 10. 12. 검색'},
+    {c:'type',t:'sel',lab:'자료 유형',opts:REF_TYPES},{c:'url',t:'in',lab:'주소',opt:true},
+    {c:'trust',t:'ta',cls:'short',lab:'이 자료를 믿을 수 있다고 본 이유',wide:true}]},
+  qa:{min:1,max:6,c:'#2E3D6C',head:i=>`질문 ${i+1}`,add:'+ 질문 추가',make:()=>({q:'',a:''}),fields:[
+    {c:'q',t:'in',lab:'예상 질문'},{c:'a',t:'ta',cls:'short',lab:'나의 답'}]},
+  ai:{min:1,max:6,c:'#27355E',head:i=>`활용 ${i+1}`,add:'+ 활용 기록 추가',make:()=>({stage:'',tool:'',prompt:'',summary:'',check:''}),grid:true,fields:[
+    {c:'stage',t:'sel',lab:'활용 단계',opts:AI_STAGES},{c:'tool',t:'in',lab:'사용 도구',ph:'예: ChatGPT, Claude, Gemini'},
+    {c:'prompt',t:'ta',cls:'short',lab:'입력한 질문',wide:true},{c:'summary',t:'ta',cls:'short',lab:'AI 답변 요약',wide:true},
+    {c:'check',t:'ta',cls:'short',lab:'확인한 방법과 내가 고치거나 판단한 내용',wide:true}]}
+};
+function fieldHTML(list,i,f,val){
+  const id = `${list}_${i}_${f.c}`;
+  const lab = f.lab ? `<label class="flabel" for="${id}">${f.lab}${f.opt?' <span class="code">(선택)</span>':''}</label>` : '';
+  const attrs = `id="${id}" data-l="${list}" data-i="${i}" data-c="${f.c}"`;
+  let ctl;
+  if(f.t==='ta') ctl = `<textarea class="${f.cls||''}" ${attrs} placeholder="${esc(f.ph||'')}">${esc(val)}</textarea>`;
+  else if(f.t==='sel') ctl = `<select ${attrs}><option value="">선택</option>${f.opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+  else ctl = `<input type="text" ${attrs} value="${esc(val)}" placeholder="${esc(f.ph||'')}">`;
+  return `<div class="f"${f.wide?' style="grid-column:1/-1"':''}>${lab}${ctl}</div>`;
+}
+function renderList(name){
+  const L = LISTS[name], arr = S[name];
+  const box = $('list_'+name);
+  let h = '';
+  arr.forEach((row,i)=>{
+    const body = L.fields.map(f=>fieldHTML(name,i,f,row[f.c])).join('');
+    h += `<div class="row" style="--c:${L.c}"><div class="row-h"><b>${L.head(i)}</b>${arr.length>L.min?`<button type="button" class="rm" onclick="removeRow('${name}',${i})">삭제</button>`:''}</div>${L.grid?`<div class="grid g2">${body}</div>`:body}</div>`;
+  });
+  h += `<button type="button" class="add" onclick="addRow('${name}')" ${arr.length>=L.max?'disabled':''}>${arr.length>=L.max?`최대 ${L.max}개까지 쓸 수 있습니다`:L.add}</button>`;
+  box.innerHTML = h;
+  box.querySelectorAll('textarea').forEach(prepTA);
+  if(name==='facts') renderAna();
+}
+function addRow(name){
+  const L = LISTS[name]; if(S[name].length>=L.max) return;
+  S[name].push(L.make()); renderList(name); changed();
+  const rows = $('list_'+name).querySelectorAll('.row'); const last = rows[rows.length-1];
+  const first = last && last.querySelector('textarea,input,select'); if(first) first.focus();
+}
+function removeRow(name,i){
+  const row = S[name][i];
+  const filled = Object.values(row).some(v=>has(v));
+  if(filled && !confirm('이 항목에 쓴 내용이 지워집니다. 삭제할까요?')) return;
+  S[name].splice(i,1); renderList(name); changed();
+}
+/* 분석: 확인한 사실마다 자동으로 칸을 만든다 */
+function renderAna(){
+  const box = $('list_ana');
+  box.innerHTML = S.facts.map((f,i)=>`
+    <div class="row" style="--c:#6F64A0">
+      <div class="row-h"><b>사실 ${CIRC[i]}</b></div>
+      <div class="factref ${has(f.text)?'':'empty'}" data-factref="${i}">${has(f.text)?esc(f.text):'6번 탐구 결과에서 사실을 먼저 적어 주세요.'}</div>
+      <div class="f"><label class="flabel" for="ana_${i}_c">관련 과학 개념</label><input type="text" id="ana_${i}_c" data-l="facts" data-i="${i}" data-c="concept" value="${esc(f.concept)}" placeholder="예: 케플러 제3법칙, 연주시차, 질량-광도 관계"></div>
+      <div class="f"><label class="flabel" for="ana_${i}_e">왜 그렇게 나타났는가 (나의 설명)</label><textarea id="ana_${i}_e" data-l="facts" data-i="${i}" data-c="explain" data-min="80">${esc(f.explain)}</textarea></div>
+    </div>`).join('');
+  box.querySelectorAll('textarea').forEach(prepTA);
+}
+function updateFactRefs(){
+  document.querySelectorAll('[data-factref]').forEach(el=>{
+    const t = S.facts[+el.dataset.factref]?.text || '';
+    el.textContent = has(t) ? t : '6번 탐구 결과에서 사실을 먼저 적어 주세요.';
+    el.classList.toggle('empty', !has(t));
+  });
+}
+/* 그림 */
+function renderFigs(){
+  const box = $('list_figs');
+  let h = '';
+  S.figs.forEach((f,i)=>{
+    h += `<div class="row" style="--c:#8A6E9E"><div class="row-h"><b>그림 ${i+1}</b><button type="button" class="rm" onclick="removeFig(${i})">삭제</button></div>
+      <div class="fig">
+        <div class="thumb">${f.src?`<img src="${f.src}" alt="그림 ${i+1}">`:'<span>사진이 없습니다</span>'}
+          <label>${f.src?'다른 사진으로 바꾸기':'사진 올리기'}<input type="file" accept="image/*" onchange="onFig(${i},this)"></label></div>
+        <div>
+          <div class="f" style="margin-top:0"><label class="flabel" for="fig_${i}_cap">그림 설명</label><textarea class="short" id="fig_${i}_cap" data-l="figs" data-i="${i}" data-c="cap" placeholder="예: 갈릴레이 위성의 궤도 반지름과 공전 주기의 관계">${esc(f.cap)}</textarea></div>
+          <div class="f"><label class="flabel" for="fig_${i}_src">출처</label><input type="text" id="fig_${i}_src" data-l="figs" data-i="${i}" data-c="source" value="${esc(f.source)}" placeholder="직접 만든 그래프면 ‘직접 작성’, 가져왔다면 자료 번호나 기관"></div>
+        </div>
+      </div></div>`;
+  });
+  h += S.figs.length<4 ? `<button type="button" class="add" onclick="addFig()">+ 그림 추가</button>` : `<button type="button" class="add" disabled>최대 4장까지 넣을 수 있습니다</button>`;
+  box.innerHTML = h;
+  box.querySelectorAll('textarea').forEach(prepTA);
+}
+function addFig(){ if(S.figs.length>=4) return; S.figs.push({src:'',cap:'',source:''}); renderFigs(); changed(); }
+function removeFig(i){
+  const f=S.figs[i]; if((f.src||has(f.cap)||has(f.source)) && !confirm('이 그림과 설명이 지워집니다. 삭제할까요?')) return;
+  S.figs.splice(i,1); renderFigs(); changed();
+}
+function onFig(i,input){
+  const file = input.files && input.files[0]; if(!file) return;
+  if(!/^image\//.test(file.type)){ alert('사진(이미지) 파일만 올릴 수 있습니다.'); return; }
+  shrink(file).then(src=>{ S.figs[i].src = src; renderFigs(); changed(); })
+    .catch(()=> alert('이 사진을 읽을 수 없습니다. JPG나 PNG 파일로 다시 올려 주세요.'));
+}
+/* 사진 용량 줄이기: 긴 변 1200px, 흰 배경 위에 JPEG로 (투명 배경 그래프가 검게 나오지 않도록) */
+function shrink(file){
+  return new Promise((res,rej)=>{
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = ()=>{
+      try{
+        const MAX=1200; let w=img.naturalWidth, h=img.naturalHeight;
+        const r=Math.min(1, MAX/Math.max(w,h)); w=Math.round(w*r); h=Math.round(h*r);
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        const cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,w,h); cx.drawImage(img,0,0,w,h);
+        URL.revokeObjectURL(url); res(cv.toDataURL('image/jpeg',0.8));
+      }catch(e){ URL.revokeObjectURL(url); rej(e); }
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error('decode')); };
+    img.src = url;
+  });
+}
+
+/* ----- 입력칸: 자동 높이와 글자 수 ----- */
+function prepTA(ta){
+  grow(ta);
+  const min = +ta.dataset.min || 0;
+  if(min){
+    let c = ta.nextElementSibling;
+    if(!c || !c.classList.contains('cnt')){ c=document.createElement('div'); c.className='cnt'; ta.after(c); }
+    count(ta);
+  }
+}
+function grow(ta){ if(!ta.offsetParent) return; ta.style.height='auto'; ta.style.height=(ta.scrollHeight+2)+'px'; }
+function regrowAll(){ document.querySelectorAll('textarea').forEach(grow); }
+let resizeTimer=null; window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer=setTimeout(regrowAll,200); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(regrowAll);
+function count(ta){
+  const min=+ta.dataset.min||0; if(!min) return;
+  const c=ta.nextElementSibling; if(!c||!c.classList.contains('cnt')) return;
+  const n=ta.value.replace(/\s/g,'').length;
+  c.textContent = `${n}자 (공백 제외) · 권장 ${min}자 이상`;
+  c.classList.toggle('met', n>=min);
+}
+
+/* ----- 상태를 화면에 채우기 ----- */
+function fillAll(){
+  document.querySelectorAll('[data-k]').forEach(el=>{ el.value = S[el.dataset.k] ?? ''; });
+  document.querySelectorAll('[data-flow]').forEach(el=>{ el.value = S.p_flow[+el.dataset.flow] || ''; });
+  document.querySelectorAll('.chip input').forEach(inp=>{
+    const g = inp.dataset.group;
+    const on = Array.isArray(S[g]) ? S[g].includes(inp.value) : S[g]===inp.value;
+    inp.checked = on; inp.closest('.chip').classList.toggle('on', on);
+  });
+  ['steps','facts','limits','refs','qa','ai'].forEach(renderList);
+  renderFigs();
+  document.querySelectorAll('textarea[data-k]').forEach(prepTA);
+  refreshConditional(); refreshProgress();
+}
+function refreshConditional(){
+  $('sidText').textContent = (S.school||sid()) ? `${S.school||'학교 미선택'} ${sid()||''}`.trim() : '-';
+  const noSchool = !S.school;
+  ['grade','cls','no'].forEach(id=>{ $(id).disabled = noSchool; });
+  $('schoolHint').classList.toggle('hidden', !noSchool);
+  $('obsBox').classList.toggle('hidden', !S.types.includes('obs'));
+  $('typeEtc').classList.toggle('hidden', !S.types.includes('etc'));
+  $('strengthEtc').classList.toggle('hidden', !S.strengths.includes('기타'));
+  const lit = S.types.includes('lit');
+  const other = S.types.some(t=>['data','sim','obs','calc','exp','etc'].includes(t));
+  $('caseBox').classList.toggle('hidden', !lit);
+  $('cmpBox').classList.toggle('hidden', lit && !other);
+  $('aiRows').classList.toggle('hidden', S.ai_used!=='활용함');
+  const q = has(S.q_final) ? `<b>나의 탐구 질문</b> ${esc(S.q_final)}` : '<b>나의 탐구 질문</b> 4번에서 최종 탐구 질문을 먼저 써 주세요.';
+  $('recallQ').innerHTML = q; $('recallQ2').innerHTML = q;
+  regrowAll();
+}
+
+/* ================= 입력 처리 ================= */
+function onField(el){
+  if(el.dataset.k){ S[el.dataset.k] = el.value; }
+  else if(el.dataset.flow!==undefined){ S.p_flow[+el.dataset.flow] = el.value; }
+  else if(el.dataset.l){
+    const row = S[el.dataset.l] && S[el.dataset.l][+el.dataset.i];
+    if(row) row[el.dataset.c] = el.value;
+    if(el.dataset.l==='facts' && el.dataset.c==='text') updateFactRefs();
+  } else return false;
+  if(el.tagName==='TEXTAREA'){ grow(el); count(el); }
+  return true;
+}
+document.addEventListener('input', e=>{
+  const el=e.target; if(!el || el.type==='checkbox' || el.type==='radio' || el.type==='file') return;
+  if(onField(el)){ if(el.dataset.k==='cls'||el.dataset.k==='no'||el.dataset.k==='q_final') refreshConditional(); changed(); }
+});
+document.addEventListener('change', e=>{
+  const el=e.target; if(!el) return;
+  if(el.type==='checkbox' && el.dataset.group){
+    const g=el.dataset.group; const set=new Set(S[g]);
+    el.checked ? set.add(el.value) : set.delete(el.value);
+    S[g]=[...set]; el.closest('.chip').classList.toggle('on', el.checked);
+    refreshConditional(); changed(); return;
+  }
+  if(el.type==='radio' && el.dataset.group){
+    S[el.dataset.group]=el.value;
+    document.querySelectorAll(`input[data-group="${el.dataset.group}"]`).forEach(r=>r.closest('.chip').classList.toggle('on', r.checked));
+    refreshConditional(); changed(); return;
+  }
+  if(el.tagName==='SELECT' && onField(el)){ refreshConditional(); changed(); }
+});
+
+/* ================= 진행 상황 ================= */
+const any = (arr,c)=> arr.some(r=>has(r[c]));
+const CHECKS = {
+  s1:[['학교',()=>has(S.school),'school'],['학년',()=>has(S.grade),'grade'],['반',()=>has(S.cls),'cls'],['번호',()=>has(S.no),'no'],['이름',()=>has(S.name),'name']],
+  s2:[['탐구 주제',()=>has(S.title),'title'],['탐구 유형',()=>S.types.length>0,'typesBox'],['관련 성취기준',()=>S.stds.length>0,'stdBox']],
+  s3:[['질문이 떠오른 순간',()=>has(S.m_moment),'m_moment'],['궁금했던 점',()=>has(S.m_why),'m_why'],['탐구의 의미',()=>has(S.m_meaning),'m_meaning']],
+  s4:[['처음 떠오른 질문',()=>has(S.q_first),'q_first'],['최종 탐구 질문',()=>has(S.q_final),'q_final'],['가설',()=>has(S.h_hyp),'h_hyp'],['가설의 근거',()=>has(S.h_basis),'h_basis']],
+  s5:[['탐구 절차',()=>any(S.steps,'do'),'list_steps'],['방법을 고른 이유',()=>has(S.why_method),'why_method']],
+  s6:[['확인한 사실',()=>any(S.facts,'text'),'list_facts']],
+  s7:[['사실에 대한 설명',()=>any(S.facts,'explain'),'list_ana'],['‘왜?’ 사다리',()=>has(S.why1),'why_result'],['가설과의 비교',()=>has(S.hyp_match),'hypBox']],
+  s8:[['탐구 질문에 대한 답',()=>has(S.c_answer),'c_answer'],['결론의 확신 정도',()=>has(S.c_conf),'confBox']],
+  s9:[['탐구의 한계',()=>any(S.limits,'limit'),'list_limits'],['새롭게 생긴 질문',()=>has(S.new_q),'new_q']],
+  s10:[['참고 자료',()=>any(S.refs,'title'),'list_refs']],
+  s11:[['생각의 변화',()=>has(S.r_before)&&has(S.r_after),'r_before'],['어려웠던 순간과 해결',()=>has(S.r_hard),'r_hard']],
+  s12:[['핵심 메시지',()=>has(S.p_message),'p_message'],['예상 질문',()=>any(S.qa,'q'),'list_qa']],
+  s13:[['AI 활용 여부',()=>has(S.ai_used),'aiBox'],['AI 활용 내용',()=>S.ai_used!=='활용함' || S.ai.some(r=>has(r.tool)||has(r.prompt)),'list_ai']],
+  s14:[['왜 탐구했는지',()=>has(S.s_why),'s_why'],['어떻게 탐구했는지',()=>has(S.s_how),'s_how'],['무엇을 알아냈는지',()=>has(S.s_found),'s_found']]
+};
+function refreshProgress(){
+  let done=0;
+  SECS.forEach(([id])=>{
+    const list=CHECKS[id]; const ok=list.filter(c=>c[1]()).length;
+    const st = ok===list.length ? 'done' : ok>0 ? 'part' : '';
+    if(st==='done') done++;
+    document.querySelectorAll(`[data-sec="${id}"]`).forEach(el=>{ el.classList.toggle('done',st==='done'); el.classList.toggle('part',st==='part'); });
+  });
+  $('bandText').textContent = `${done} / 14 완료`;
+  const c=$('cntDone'); if(c) c.textContent=done;
+}
+function missing(){
+  const out=[];
+  SECS.forEach(([id,n])=> CHECKS[id].forEach(([lab,test,target])=>{ if(!test()) out.push({sec:id,name:n,lab,target}); }));
+  return out;
+}
+
+/* ================= 자동 임시저장 =================
+   - 불러오기가 끝나기 전에는 절대 저장하지 않는다 (빈 내용으로 덮어쓰기 방지)
+   - 입력 후 0.6초 뒤, 그리고 화면을 벗어날 때 즉시 저장
+   - 용량이 넘치면 사진을 빼고라도 글은 저장하고 분명하게 알린다 */
+let storageOK=false, ready=false, saveTimer=null, reportTimer=null, reportDirty=true;
+function storageWorks(){
+  try{ const t='__bh_test__'; localStorage.setItem(t,'1'); const ok=localStorage.getItem(t)==='1'; localStorage.removeItem(t); return ok; }catch(e){ return false; }
+}
+function setStatus(kind,text){
+  const s=$('status'); s.className='status '+(kind||''); $('statusText').textContent=text;
+}
+function changed(){
+  refreshProgress();
+  reportDirty=true; clearTimeout(reportTimer); reportTimer=setTimeout(buildReport, 900);
+  if(!storageOK){ setStatus('warn','자동 임시저장이 되지 않는 브라우저입니다. 그만둘 때는 ‘파일로 저장’을 누르세요.'); return; }
+  setStatus('pending','저장하는 중…');
+  clearTimeout(saveTimer); saveTimer=setTimeout(saveNow, 600);
+}
+function saveNow(){
+  clearTimeout(saveTimer);
+  if(!ready || !storageOK) return;
+  const now=Date.now();
+  try{
+    localStorage.setItem(KEY, JSON.stringify({savedAt:now, data:S}));
+    setStatus('saved', `자동 임시저장됨 ${timeText(now)}`);
+  }catch(e){
+    try{
+      const lite = JSON.parse(JSON.stringify(S)); lite.figs = lite.figs.map(f=>({...f, src:''}));
+      localStorage.setItem(KEY, JSON.stringify({savedAt:now, data:lite, noImages:true}));
+      setStatus('warn', `글만 임시저장됨 ${timeText(now)} · 사진은 용량이 커서 빠졌습니다. ‘파일로 저장’을 눌러 두세요.`);
+    }catch(e2){
+      setStatus('warn','임시저장에 실패했습니다. 지금 ‘파일로 저장’을 눌러 주세요.');
+    }
+  }
+}
+function restore(){
+  storageOK = storageWorks();
+  if(!storageOK){ show('bannerStorage'); setStatus('warn','자동 임시저장이 되지 않는 브라우저입니다. 그만둘 때는 ‘파일로 저장’을 누르세요.'); ready=true; return; }
+  let raw=null;
+  try{ raw=localStorage.getItem(KEY); }catch(e){ raw=null; }
+  if(raw){
+    try{
+      const p=JSON.parse(raw);
+      S = normalize(p.data);
+      $('restoreText').textContent = `${timeText(p.savedAt)}에 임시저장된 내용을 불러왔습니다.` + (p.noImages?' 사진은 저장되지 않았으니 다시 올려 주세요.':'');
+      show('bannerRestore');
+      setStatus('saved', `자동 임시저장됨 ${timeText(p.savedAt)}`);
+    }catch(e){
+      // 읽지 못한 원본은 지우지 않고 따로 보관
+      try{ localStorage.setItem(KEY+'-broken-'+Date.now(), raw); }catch(e2){}
+      S = blank(); show('bannerBroken');
+      setStatus('warn','임시저장된 내용을 읽지 못했습니다.');
+    }
+  } else {
+    setStatus('', '쓰기 시작하면 자동으로 임시저장됩니다.');
+  }
+  ready=true;
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') saveNow(); });
+window.addEventListener('pagehide', saveNow);
+window.addEventListener('storage', e=>{ if(e.key===KEY) setStatus('warn','다른 창이나 탭에서도 이 보고서가 열려 있습니다. 내용이 엇갈리지 않도록 한 곳에서만 쓰세요.'); });
+window.addEventListener('beforeunload', saveNow);
+
+function newDoc(){
+  const ok = confirm('지금까지 쓴 내용이 모두 지워지고 처음부터 새로 씁니다.\n필요하면 먼저 ‘파일로 저장’을 해 두세요.\n\n정말 지울까요?');
+  if(!ok) return;
+  try{ const raw=localStorage.getItem(KEY); if(raw){ const p=JSON.parse(raw); if(p&&p.data&&Array.isArray(p.data.figs)) p.data.figs=p.data.figs.map(f=>({...f,src:''})); localStorage.setItem(KEY+'-backup', JSON.stringify(p)); } }catch(e){}
+  S = blank(); fillAll(); hide('bannerRestore'); saveNow(); buildReport();
+  window.scrollTo({top:0});
+}
+
+/* ================= 파일 저장 / 불러오기 ================= */
+function fileBase(){ return `${S.school||'학교'}_${sid()||'학번'}_${(S.name||'이름').trim()}_행성우주과학자유탐구`.replace(/[\\/:*?"<>|\s]+/g,'_'); }
+function saveFile(){
+  try{
+    const blob=new Blob([JSON.stringify({app:APP,v:1,savedAt:Date.now(),data:S})],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fileBase()+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  }catch(e){ alert('파일을 저장하지 못했습니다. Safari나 Chrome에서 열었는지 확인해 주세요.'); }
+}
+function onLoadFile(e){
+  const f=e.target.files && e.target.files[0]; e.target.value=''; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const p=JSON.parse(r.result);
+      if(p && p.app && p.app!==APP){ alert('다른 과목의 보고서 파일입니다. 행성우주과학 보고서에서 ‘파일로 저장’한 파일을 골라 주세요.'); return; }
+      if(!p || !p.data) throw new Error('form');
+      if(!confirm('불러온 파일의 내용으로 바꿉니다. 지금 화면의 내용은 사라집니다. 계속할까요?')) return;
+      S = normalize(p.data); fillAll(); saveNow(); buildReport();
+      alert('불러왔습니다. 이어서 쓰세요.');
+    }catch(err){ alert('이 보고서 파일이 아니거나 파일이 손상되었습니다. ‘파일로 저장’으로 만든 .json 파일을 골라 주세요.'); }
+  };
+  r.onerror=()=>alert('파일을 읽지 못했습니다.');
+  r.readAsText(f);
+}
+
+/* ================= 미리보기와 PDF ================= */
+function startPreview(){
+  const m = missing();
+  if(m.length){
+    $('missingList').innerHTML = m.map(x=>`<li><button type="button" onclick="goMissing('${x.target}')">${x.name} › ${x.lab}</button></li>`).join('');
+    $('checkMask').classList.add('show');
+  } else openPreview();
+}
+function goMissing(target){
+  closeMask('checkMask');
+  const el=$(target); if(!el) return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  const f = el.matches('input,textarea,select') ? el : el.querySelector('input,textarea,select');
+  if(f) setTimeout(()=>f.focus({preventScroll:true}), 400);
+}
+let scrollPos=0;
+function openPreview(){
+  saveNow(); buildReport();
+  scrollPos = window.scrollY;
+  document.body.classList.add('preview'); window.scrollTo(0,0);
+}
+function endPreview(){
+  document.body.classList.remove('preview'); regrowAll(); window.scrollTo(0,scrollPos);
+}
+let oldTitle=document.title;
+function printNow(){
+  if(reportDirty) buildReport();
+  oldTitle=document.title; document.title=`${fileBase()}보고서`;
+  window.print();
+  setTimeout(()=>{ document.title=oldTitle; }, 1500);
+}
+window.addEventListener('beforeprint', ()=>{ if(reportDirty) buildReport(); });
+window.addEventListener('afterprint', ()=>{ document.title=oldTitle; });
+
+/* ================= 보고서 조립 ================= */
+function paras(s, lead){
+  if(!has(s)) return '';
+  const ps = s.trim().split(/\n\s*\n/);
+  return ps.map((p,i)=>`<p>${i===0&&lead?`<span class="lab">${lead}</span>`:''}${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+}
+function inline(s){ return esc((s||'').trim()).replace(/\n/g,'<br>'); }
+function sub(title, html){ return html ? `<h3>${title}</h3>${html}` : ''; }
+function sec(title, html, cls){ return html ? `<section${cls?` class="${cls}"`:''}><h2>${title}</h2>${html}</section>` : ''; }
+function today(){ const d=new Date(); return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`; }
+
+function buildReport(){
+  const R = [];
+  const typeNames = S.types.map(v=> v==='etc' ? (has(S.typeEtc)?`기타(${S.typeEtc.trim()})`:'기타') : (TYPES.find(t=>t[0]===v)||[,''])[1]).filter(Boolean).join(', ');
+  const stdNames = [];
+  STDS.forEach(([u,items])=>items.forEach(([c,t])=>{ if(S.stds.includes(c)) stdNames.push(`[${c}] ${t}`); }));
+
+  // 머리
+  R.push(`<div class="rp-school"><span>2026학년도 2학기 행성우주과학 자유탐구 보고서</span></div>`);
+  R.push(`<h1>${has(S.title)?inline(S.title):'(탐구 주제를 입력하세요)'}</h1>`);
+  R.push(`<table class="rp-info"><tr><th>학교</th><td>${esc(S.school)}</td><th>학번</th><td>${esc(sid())}</td></tr>
+    <tr><th>이름</th><td>${esc(S.name)}</td><th>제출일</th><td>${today()}</td></tr>
+    <tr><th>탐구 유형</th><td colspan="3">${esc(typeNames)}</td></tr>
+    <tr><th>관련 성취기준</th><td colspan="3">${stdNames.map(esc).join('<br>')}</td></tr></table>`);
+
+  // 탐구 요약
+  const sumItems = [['탐구 질문',S.q_final,true],['왜 이 탐구를 했나',S.s_why],['어떻게 탐구했나',S.s_how],['무엇을 알아냈나',S.s_found]].filter(x=>has(x[1]));
+  if(sumItems.length) R.push(`<div class="rp-sum"><div class="sumh">탐구 요약</div><dl>${sumItems.map(([t,v,q])=>`<dt class="sumlab">${t}</dt><dd${q?' class="qline"':''}>${inline(v)}</dd>`).join('')}</dl></div>`);
+
+  // Ⅰ 탐구 동기
+  R.push(sec('Ⅰ. 탐구 동기', paras(S.m_moment,'계기') + paras(S.m_why,'궁금했던 점') + paras(S.m_meaning,'탐구의 의미')));
+
+  // Ⅱ 탐구 질문과 가설
+  let qf='';
+  const qs=[];
+  if(has(S.q_first)) qs.push(`<li><span class="tag">처음 떠오른 질문</span><span class="qt">${inline(S.q_first)}</span></li>`);
+  if(has(S.q_second)) qs.push(`<li><span class="tag">다듬은 질문</span><span class="qt">${inline(S.q_second)}</span>${has(S.q_second_reason)?`<div class="why">바꾼 이유: ${inline(S.q_second_reason)}</div>`:''}</li>`);
+  if(has(S.q_final)) qs.push(`<li class="final"><span class="tag">최종 탐구 질문</span><span class="qt">${inline(S.q_final)}</span>${has(S.q_final_reason)?`<div class="why">바꾼 이유: ${inline(S.q_final_reason)}</div>`:''}</li>`);
+  if(qs.length) qf = `<ol class="qflow">${qs.join('')}</ol>`;
+  let know='';
+  if(has(S.k_know)||has(S.k_unknown)) know = `<div class="two"><div><span class="lab">이미 알고 있던 것</span>${inline(S.k_know)}</div><div><span class="lab">탐구로 확인할 것</span>${inline(S.k_unknown)}</div></div>`;
+  const hyp = paras(S.h_hyp,'가설') + paras(S.h_basis,'근거');
+  R.push(sec('Ⅱ. 탐구 질문과 가설', sub('1. 질문의 발전 과정', qf) + sub('2. 탐구 전 알고 있던 것과 확인할 것', know) + sub('3. 가설과 근거', hyp)));
+
+  // Ⅲ 탐구 방법
+  const steps = S.steps.filter(r=>has(r.do)||has(r.tool));
+  const stepT = steps.length ? `<table><tr><th style="width:9%">단계</th><th>한 일</th><th style="width:28%">사용한 자료·도구</th></tr>${steps.map((r,i)=>`<tr><td>${i+1}</td><td>${inline(r.do)}</td><td>${inline(r.tool)}</td></tr>`).join('')}</table>` : '';
+  const showCmp = !$('cmpBox').classList.contains('hidden') && (has(S.cmp_var)||has(S.cmp_same)||has(S.cmp_measure));
+  const cmp = showCmp ? `<table><tr><th>비교하거나 바꾼 것</th><th>같게 유지한 조건</th><th>측정하거나 관찰한 것</th></tr><tr><td>${inline(S.cmp_var)}</td><td>${inline(S.cmp_same)}</td><td>${inline(S.cmp_measure)}</td></tr></table>` : '';
+  const caseC = !$('caseBox').classList.contains('hidden') ? paras(S.case_criteria) : '';
+  let n3=1; const m3=[];
+  if(stepT) m3.push(sub(`${n3++}. 탐구 절차`, stepT));
+  if(has(S.why_method)) m3.push(sub(`${n3++}. 이 방법을 고른 이유`, paras(S.why_method)));
+  if(cmp) m3.push(sub(`${n3++}. 비교 기준과 조건`, cmp));
+  if(caseC) m3.push(sub(`${n3++}. 사례 선정과 비교 기준`, caseC));
+  const showObs = !$('obsBox').classList.contains('hidden') && (has(S.obs_when)||has(S.obs_where)||has(S.obs_gear)||has(S.obs_sky));
+  if(showObs) m3.push(sub(`${n3++}. 관측 조건`, `<table><tr><th>관측 일시</th><th>관측 장소</th><th>관측 기구</th><th>하늘 상태</th></tr><tr><td>${inline(S.obs_when)}</td><td>${inline(S.obs_where)}</td><td>${inline(S.obs_gear)}</td><td>${inline(S.obs_sky)}</td></tr></table>`));
+  R.push(sec('Ⅲ. 탐구 방법', m3.join('')));
+
+  // Ⅳ 탐구 결과
+  const figs = S.figs.filter(f=>f.src);
+  const figH = figs.map((f,i)=>`<figure><img src="${f.src}" alt="그림 ${i+1}"><figcaption class="cap">그림 ${i+1}. ${inline(f.cap)}${has(f.source)?` (출처: ${inline(f.source)})`:''}</figcaption></figure>`).join('');
+  const facts = S.facts.map((f,i)=>({...f,i})).filter(f=>has(f.text));
+  const factH = facts.length ? `<ol class="facts" style="list-style:none;padding-left:0">${facts.map(f=>`<li>${CIRC[f.i]} ${inline(f.text)}</li>`).join('')}</ol>` : '';
+  let n4=1; const m4=[];
+  if(figH) m4.push(sub(`${n4++}. 표·그래프·사진`, figH));
+  if(factH) m4.push(sub(`${n4++}. 확인한 사실`, factH));
+  R.push(sec('Ⅳ. 탐구 결과', m4.join('')));
+
+  // Ⅴ 분석 및 해석
+  const ana = S.facts.map((f,i)=>({...f,i})).filter(f=>has(f.explain)||has(f.concept));
+  const anaH = ana.map(f=>`<div class="ana"><div class="fact">${CIRC[f.i]} ${has(f.text)?inline(f.text):''}</div>${has(f.concept)?`<div class="con"><span class="lab">관련 개념</span>${inline(f.concept)}</div>`:''}${paras(f.explain)}</div>`).join('');
+  const chainItems = [['결과',S.why_result],['왜?',S.why1],['그것은 왜?',S.why2],['그것은 또 왜?',S.why3]].filter(x=>has(x[1]));
+  const chainH = chainItems.length ? `<ol class="chain">${chainItems.map(([t,v])=>`<li><span class="tag">${t}</span>${inline(v)}</li>`).join('')}</ol>` : '';
+  const hypH = (has(S.hyp_match)||has(S.hyp_reason)) ? `${has(S.hyp_match)?`<p><span class="lab">가설과의 관계</span>${esc(S.hyp_match)}</p>`:''}${paras(S.hyp_reason)}` : '';
+  let n5=1; const m5=[];
+  if(anaH) m5.push(sub(`${n5++}. 결과의 과학적 해석`, anaH));
+  if(chainH) m5.push(sub(`${n5++}. ‘왜?’를 따라간 설명`, chainH));
+  if(hypH) m5.push(sub(`${n5++}. 가설과의 비교`, hypH));
+  if(has(S.alt)) m5.push(sub(`${n5++}. 다르게 해석할 가능성`, paras(S.alt)));
+  R.push(sec('Ⅴ. 분석 및 해석', m5.join('')));
+
+  // Ⅵ 결론
+  const confH = has(S.c_conf) ? `<p><span class="lab">결론의 확실성</span>${esc(S.c_conf)}${has(S.c_conf_reason)?` — ${inline(S.c_conf_reason)}`:''}</p>` : (has(S.c_conf_reason)?paras(S.c_conf_reason,'결론의 확실성'):'');
+  R.push(sec('Ⅵ. 결론', paras(S.c_answer) + confH));
+
+  // Ⅶ 한계와 후속 탐구
+  const lim = S.limits.filter(r=>has(r.limit)||has(r.effect)||has(r.redo));
+  const limT = lim.length ? `<table><tr><th>탐구의 한계</th><th>결과에 미쳤을 영향</th><th>다시 한다면</th></tr>${lim.map(r=>`<tr><td>${inline(r.limit)}</td><td>${inline(r.effect)}</td><td>${inline(r.redo)}</td></tr>`).join('')}</table>` : '';
+  const links = paras(S.link_unit,'다른 단원') + paras(S.link_subject,'다른 교과') + paras(S.link_career,'사회·진로');
+  let n7=1; const m7=[];
+  if(limT) m7.push(sub(`${n7++}. 한계와 개선 방안`, limT));
+  if(has(S.new_q)) m7.push(sub(`${n7++}. 새롭게 생긴 질문`, paras(S.new_q)));
+  if(links) m7.push(sub(`${n7++}. 연계와 확장`, links));
+  R.push(sec('Ⅶ. 한계와 후속 탐구', m7.join('')));
+
+  // Ⅷ 탐구를 마치며
+  const chg = (has(S.r_before)||has(S.r_after)) ? `<div class="two"><div><span class="lab">탐구 전</span>${inline(S.r_before)}</div><div><span class="lab">탐구 후</span>${inline(S.r_after)}</div></div>` : '';
+  const strs = S.strengths.map(s=> s==='기타' ? (has(S.strengthEtc)?S.strengthEtc.trim():'') : s).filter(Boolean);
+  const strH = (strs.length||has(S.r_scene)) ? `${strs.length?`<div class="tags">${strs.map(s=>`<span class="tagc">${esc(s)}</span>`).join('')}</div>`:''}${paras(S.r_scene)}` : '';
+  let n8=1; const m8=[];
+  if(chg) m8.push(sub(`${n8++}. 생각의 변화`, chg));
+  if(has(S.r_hard)) m8.push(sub(`${n8++}. 어려웠던 순간과 해결`, paras(S.r_hard)));
+  if(strH) m8.push(sub(`${n8++}. 이 탐구에서 드러난 나의 강점`, strH));
+  R.push(sec('Ⅷ. 탐구를 마치며', m8.join('')));
+
+  // Ⅸ 참고 문헌
+  const refs = S.refs.map((r,i)=>({...r,i})).filter(r=>has(r.title)||has(r.author)||has(r.url));
+  const refL = refs.length ? `<ol class="refs">${refs.map(r=>`<li>[${r.i+1}] ${has(r.author)?inline(r.author)+', ':''}「${inline(r.title)}」${has(r.type)?` (${esc(r.type)})`:''}${has(r.date)?`, ${inline(r.date)}`:''}.${has(r.url)?`<br><span class="url">${esc(r.url.trim())}</span>`:''}</li>`).join('')}</ol>` : '';
+  const trust = refs.filter(r=>has(r.trust));
+  const trustT = trust.length ? `<table><tr><th style="width:12%">자료</th><th>이 자료를 믿을 수 있다고 본 이유</th></tr>${trust.map(r=>`<tr><td>[${r.i+1}]</td><td>${inline(r.trust)}</td></tr>`).join('')}</table>` : '';
+  let n9=1; const m9=[];
+  if(refL) m9.push(sub(`${n9++}. 참고한 자료`, refL));
+  if(trustT) m9.push(sub(`${n9++}. 자료의 신뢰성 검토`, trustT));
+  if(has(S.conflict)) m9.push(sub(`${n9++}. 자료 사이의 비교`, paras(S.conflict)));
+  R.push(sec('Ⅸ. 참고 문헌', m9.join('')));
+
+  // 부록 A 발표 준비
+  const flowRows = FLOW.map((t,i)=>[t,S.p_flow[i]]).filter(x=>has(x[1]));
+  const flowT = flowRows.length ? `<table><tr><th style="width:30%">순서</th><th>핵심 키워드</th></tr>${flowRows.map(([t,v])=>`<tr><td>${t}</td><td>${inline(v)}</td></tr>`).join('')}</table>` : '';
+  const qa = S.qa.filter(r=>has(r.q)||has(r.a));
+  const qaH = qa.map((r,i)=>`<div class="qa"><p><span class="lab">질문 ${i+1}</span>${inline(r.q)}</p><p><span class="lab">답</span>${inline(r.a)}</p></div>`).join('');
+  let na=1; const ma=[];
+  if(has(S.p_message)) ma.push(sub(`${na++}. 핵심 메시지`, paras(S.p_message)));
+  if(flowT) ma.push(sub(`${na++}. 발표 흐름`, flowT));
+  if(qaH) ma.push(sub(`${na++}. 예상 질문과 답`, qaH));
+  R.push(sec('부록 A. 발표 준비', ma.join(''), 'appx'));
+
+  // 부록 B AI 활용
+  let aiH='';
+  if(S.ai_used==='활용하지 않음') aiH = '<p>이 탐구에서는 AI를 활용하지 않았습니다.</p>';
+  else if(S.ai_used==='활용함'){
+    const rows = S.ai.filter(r=>has(r.stage)||has(r.tool)||has(r.prompt)||has(r.summary)||has(r.check));
+    aiH = rows.map((r,i)=>`<div class="qa"><p><span class="lab">활용 ${i+1}</span>${esc(r.stage)}${has(r.tool)?` · ${inline(r.tool)}`:''}</p>${has(r.prompt)?`<p><span class="lab">입력한 질문</span>${inline(r.prompt)}</p>`:''}${has(r.summary)?`<p><span class="lab">답변 요약</span>${inline(r.summary)}</p>`:''}${has(r.check)?`<p><span class="lab">확인과 판단</span>${inline(r.check)}</p>`:''}</div>`).join('') || '<p>AI를 활용했으나 활용 내용을 적지 않았습니다.</p>';
+  }
+  R.push(sec('부록 B. AI 활용 기록', aiH, 'appx'));
+
+  $('report').innerHTML = R.join('');
+  reportDirty=false;
+}
+
+/* ================= 시작 ================= */
+function detectInApp(){
+  const ua = navigator.userAgent.toLowerCase();
+  if(/kakaotalk|naver\(inapp|instagram|fban|fbav|line\/|daumapps|everytimeapp|band\//.test(ua)) $('inappMask').classList.add('show');
+}
+buildStatic();
+restore();
+fillAll();
+buildReport();
+detectInApp();
+</script>
+</body>
+</html>
